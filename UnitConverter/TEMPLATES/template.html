@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter</title>
+    <script>
+        async function convert() {
+            const mproperty = document.getElementById('mproperty').value;
+            const value = parseFloat(document.getElementById('value').value);
+            const inputUnit = document.getElementById('input_unit').value;
+            const outputUnit = document.getElementById('output_unit').value;
+
+            const response = await fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token for security
+                },
+                body: JSON.stringify({
+                    mproperty: mproperty,
+                    value: value,
+                    input_unit: inputUnit,
+                    output_unit: outputUnit
+                })
+            });
+
+            const result = await response.json();
+            document.getElementById('result').innerText = 'Result: ' + result.result;
+        }
+    </script>
+</head>
+<body>
+    <h1>Unit Converter</h1>
+    <form onsubmit="event.preventDefault(); convert();">
+        <label for="mproperty">Measurement Property:</label>
+        <select id="mproperty" required>
+            <option value="length">Length</option>
+            <option value="weight">Weight</option>
+            <option value="temperature">Temperature</option>
+        </select>
+        <br><br>
+
+        <label for="value">Value:</label>
+        <input type="number" id="value" required>
+        <br><br>
+
+        <label for="input_unit">Input Unit:</label>
+        <select id="input_unit" required>
+            <option value="meters">Meters</option>
+            <option value="centimeter">Centimeter</option>
+            <option value="kilometers">Kilometers</option>
+            <option value="miles">Miles</option>
+            <option value="feet">Feet</option>
+            <option value="inches">Inches</option>
+            <option value="grams">Grams</option>
+            <option value="kilograms">Kilograms</option>
+            <option value="pounds">Pounds</option>
+            <option value="ounces">Ounces</option>
+            <option value="celsius">Celsius</option>
+            <option value="fahrenheit">Fahrenheit</option>
+            <option value="kelvin">Kelvin</option>
+        </select>
+        <br><br>
+
+        <label for="output_unit">Output Unit:</label>
+        <select id="output_unit" required>
+            <option value="meters">Meters</option>
+            <option value="centimeter">Centimeter</option>
+            <option value="kilometers">Kilometers</option>
+            <option value="miles">Miles</option>
+            <option value="feet">Feet</option>
+            <option value="inches">Inches</option>
+            <option value="grams">Grams</option>
+            <option value="kilograms">Kilograms</option>
+            <option value="pounds">Pounds</option>
+            <option value="ounces">Ounces</option>
+            <option value="celsius">Celsius</option>
+            <option value="fahrenheit">Fahrenheit</option>
+            <option value="kelvin">Kelvin</option>
+        </select>
+        <br><br>
+
+        <button type="submit">Convert</button>
+    </form>
+
+    <h2 id="result">Result: </h2>
+</body>
+</html>
