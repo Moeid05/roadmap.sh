@@ -5,7 +5,6 @@ url shorten service : https://roadmap.sh/projects/url-shortening-service<br>
 md note taking app : https://roadmap.sh/projects/markdown-note-taking-app<br>
 caching proxy : https://roadmap.sh/projects/caching-server<br>
 weather api : https://roadmap.sh/projects/weather-api-wrapper-service<br>
-personal blog : https://roadmap.sh/projects/personal-blog<br>
 unit converter : https://roadmap.sh/projects/unit-converter<br>
 number guessing game : https://roadmap.sh/projects/number-guessing-game<br>
 
