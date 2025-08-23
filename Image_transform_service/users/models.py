@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser,PermissionsMixin
 from django.db import models
 from .managers import CustomUserManager
-from management.models import Images
+from management.models import Image
 class CustomUser(AbstractUser,PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
@@ -12,8 +12,6 @@ class CustomUser(AbstractUser,PermissionsMixin):
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
-
-    images = models.ForeignKey(Images,on_delete=models.CASCADE)
 
     def __str__(self):
         return self.username

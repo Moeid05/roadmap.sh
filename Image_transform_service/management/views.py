@@ -1,10 +1,29 @@
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView ,ListAPIView ,GenericAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
-from .serializer import Image_uploader_serializer
+from .serializer import ImageSerializer
 from .models import Image
-class UploadImage(CreateAPIView) :
+
+class UploadImageView(CreateAPIView) :
     queryset = Image.objects.all()
     permission_classes = [IsAuthenticated]
-    serializer_class = Image_uploader_serializer
+    serializer_class = ImageSerializer
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+class RetrieveImageView(GenericAPIView):
+    queryset = Image.objects.all()
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = FileResponse(instance.image.open(), content_type='image/jpeg')
+        response['Content-Disposition'] = f'attachment; filename="{instance.image.name}"'
+        return response
+        
+class ImagePagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+class ImageListView(ListAPIView):
+    queryset = Image.objects.all().order_by('-id')
+    serializer_class = ImageSerializer
+    pagination_class = ImagePagination
