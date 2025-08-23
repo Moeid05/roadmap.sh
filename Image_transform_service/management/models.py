@@ -11,6 +11,9 @@ class Image(models.Model):
                                 related_name='images',
                                 blank=True,
                                 null=True)
+    @property
+    def image_url_with_placeholder(self):
+        return f"http://127.0.0.1:8000/images/{self.id}"
     def clean(self):
         if self.user is None:
             raise ValidationError("User must be specified.")
