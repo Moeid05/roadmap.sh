@@ -125,11 +125,7 @@ def transform_image(image, transformations):
     
     return image
     
-def main(path,transforms) :
-    print('================')
-    print('was in main ')
-    print('path :'+path)
-    print('================')
+def local(path,transforms) :
     img = Image.open(path)
     transformed_img = transform_image(img, transforms)
     if transforms.get('format') :
@@ -139,6 +135,6 @@ def main(path,transforms) :
         transformed_img.save(new_path)
     transformed_img.save(new_path)
     if (new_path)!= path : os.remove(path) 
-    print('================')
-    print('passed main main ')
-    print('================')
+
+def cloud(path,transforms) :
+    pass

@@ -1,6 +1,10 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-+8%otmm&!1y@b@)@jm^@o^0tj1&47dx%e+rcet&&vw8$skwm$e'
@@ -20,6 +24,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'storages',
     'users',
     'management',
 ]
@@ -106,7 +111,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 AUTH_USER_MODEL = 'users.CustomUser'
 
 SIMPLE_JWT = {
@@ -118,3 +122,21 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_S3_ADDRESSING_STYLE = "path"
+AWS_S3_CUSTOM_DOMAIN = AWS_STORAGE_BUCKET_NAME + '/'
+
+STORAGES ={
+    "default" :{
+        "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
+    },
+    "staticfiles" : {
+        "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
+    }
+} 
