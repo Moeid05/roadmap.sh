@@ -1,4 +1,7 @@
-import os 
+from django.core.files.base import ContentFile
+import io
+import os
+from django.conf import settings 
 from django.http import FileResponse
 from rest_framework.generics import CreateAPIView ,ListAPIView ,GenericAPIView
 from rest_framework.pagination import PageNumberPagination
@@ -9,6 +12,7 @@ from rest_framework import status
 from .serializer import ImageSerializer ,TransformImageSerializer
 from .models import Image
 from . import transformer
+
 class UploadImageView(CreateAPIView) :
     queryset = Image.objects.all()
     permission_classes = [IsAuthenticated]
@@ -52,11 +56,32 @@ class TransformImageView(APIView):
         serializer = TransformImageSerializer(data=request.data)
         if serializer.is_valid():
             transforms = serializer.get_transforms()
-            image_path = serializer.get_image_path()
-
+            image_instance = serializer.get_image_instance().image
+            storage = settings.STORAGE
             try:
-                transformer.main(image_path, transforms)
-                return Response({"detail": "Image transformed successfully."}, status=status.HTTP_200_OK)
+                transformed_image,img_format = transformer.transform_instance_image(image_instance, transforms)
+                img_io = io.BytesIO()
+                transformed_image.save(img_io, format = img_format or 'PNG')
+                img_content = ContentFile(img_io.getvalue(), name=f'transformed.{img_format.lower() if img_format else "jpeg"}')
+                return FileResponse(img_content , content_type='image/jpeg')
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class TransformAndUpdateImageView(APIView) : 
+    def post(self ,request ,id):
+        data = request.data
+        data['image_id'] = id
+        serializer = TransformImageSerializer(data=request.data)
+        if serializer.is_valid():
+            transforms = serializer.get_transforms()
+            image_path = serializer.get_image_path()
+            image_instance = serializer.get_image_instance().image
+            print(image_path)
+            try:
+                new_image,img_format = transformer.transform_instance_image(image_instance, transforms)
+                serializer.update_image(new_image,img_format)
+                return FileResponse(serializer.get_image_instance().image.open(),content_type='image/jpeg')
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:

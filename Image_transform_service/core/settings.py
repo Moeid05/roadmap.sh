@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
-    'storages',
     'users',
     'management',
 ]
@@ -122,21 +121,22 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
-
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_S3_ADDRESSING_STYLE = "path"
-AWS_S3_CUSTOM_DOMAIN = AWS_STORAGE_BUCKET_NAME + '/'
-
-STORAGES ={
-    "default" :{
-        "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
-    },
-    "staticfiles" : {
-        "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
+STORAGE = os.environ.get('storage')
+if STORAGE == "cloud" : 
+    INSTALLED_APPS+=['storages',]
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+    AWS_S3_ADDRESSING_STYLE = "path"
+    AWS_S3_CUSTOM_DOMAIN = AWS_STORAGE_BUCKET_NAME + '/'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STORAGES ={
+        "default" :{
+            "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
+        },
+        "staticfiles" : {
+            "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
+        }
     }
-} 

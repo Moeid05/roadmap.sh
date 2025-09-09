@@ -34,24 +34,21 @@ def apply_sepia(image):
     return image
 
 
-    return image
-def apply_blur(image):
-    return image.filter(ImageFilter.GaussianBlur(radius=5))
-def apply_sharpen(image):
-    return image.filter(ImageFilter.SHARPEN)
-
-
 def resize(image,width,height) : 
     if width and height:
-        image = image.resize((width, height))
+        return image.resize((width, height))
+    return image
 
 def crop (image,width,height,x,y) : 
     if width and height and x is not None and y is not None:
-        image = image.crop((x, y, x + width, y + height))
+        return image.crop((x, y, x + width, y + height))
+    return image
+        
 
 def rotate(image,angle) : 
     if angle is not None:
-        image = image.rotate(angle)
+        return image.rotate(angle)
+    return image
         
 def watermark(image, text, position=(0, 0), font_size=20):
     watermark = Image.new('RGBA', image.size)
@@ -63,28 +60,25 @@ def watermark(image, text, position=(0, 0), font_size=20):
 def compress(image,quality) : 
     output = io.BytesIO()
     image.save(output, format='png', quality=quality)
-    image = Image.open(output)
+    return Image.open(output)
 
 def transform_image(image, transformations):
-    print('================')
-    print('was in transformer ')
-    print('================')
-
+    print('random number : 20351')
     if 'resize' in transformations:
         width = transformations['resize'].get('width')
         height = transformations['resize'].get('height')
-        resize(image,width,height)
+        image = resize(image,width,height)
 
     if 'crop' in transformations:
         width = transformations['crop'].get('width')
         height = transformations['crop'].get('height')
         x = transformations['crop'].get('x')
         y = transformations['crop'].get('y')
-        crop(image,width,height,x,y)
+        image = crop(image,width,height,x,y)
 
     if 'rotate' in transformations:
         angle = transformations['rotate']
-        rotate(image,angle)
+        image = rotate(image,angle)
 
     if 'watermark' in transformations:
         text = transformations['watermark'].get('text')
@@ -100,7 +94,7 @@ def transform_image(image, transformations):
 
     if 'compress' in transformations:
         quality = transformations['compress'].get('quality', 85)
-        compress(image,quality)
+        image = compress(image,quality)
 
     if 'format' in transformations:
         format_type = transformations['format'].upper()
@@ -116,25 +110,73 @@ def transform_image(image, transformations):
         if filters.get('sepia'):
             image = apply_sepia(image)
         if filters.get('blur'):
-            image = apply_blur(image)
+            image = image.filter(ImageFilter.GaussianBlur(radius=5))
         if filters.get('sharpen'):
-            image = apply_sharpen(image)
-    print('================')
-    print('passed transformer ')
-    print('================')
+            image = image.filter(ImageFilter.SHARPEN)
     
     return image
-    
-def local(path,transforms) :
+
+def transform_instance_image(image,transforms) :
+    img = Image.open(image)
+    transformed_img = transform_image(img, transforms)
+    img_io = io.BytesIO()
+    img_format = transforms.get('format') if transforms.get('format') else 'JPEG'
+    transformed_img.save(img_io, format=img_format)
+    img_io.seek(0)
+    return transformed_img , img_format
+
+
+def transform_local(path,transforms) :
     img = Image.open(path)
     transformed_img = transform_image(img, transforms)
-    if transforms.get('format') :
-        format_type = transforms.get('format').upper() 
-        pattern = r'\.(jpg|jpeg|png|gif|bmp|tiff)$'
-        new_path = re.sub(pattern, '', path) + f'.{format_type.lower()}'
-        transformed_img.save(new_path)
-    transformed_img.save(new_path)
-    if (new_path)!= path : os.remove(path) 
+    return transformed_img
 
-def cloud(path,transforms) :
-    pass
+# def transform_cloud(image_instance,transforms) :
+#     img = Image.open(image_instance.image)
+#     transformed_img = transform_image(img, transforms)
+#     return transformed_img
+    
+def transform_cloud(image_instance, transforms):
+    img = Image.open(image_instance.image)
+    transformed_img = transform_image(img, transforms)
+    img_io = io.BytesIO()
+    img_format = transformed_img.format if transformed_img.format else 'JPEG'
+    transformed_img.save(img_io, format=img_format)
+    img_io.seek(0)
+    return img_io
+
+# def transform_local_image(path,transforms) :
+#     img = Image.open(path)
+#     transformed_img = transform_image(img, transforms)
+#     if transforms.get('format') :
+#         format_type = transforms.get('format').upper() 
+#         pattern = r'\.(jpg|jpeg|png|gif|bmp|tiff)$'
+#         new_path = re.sub(pattern, '', path) + f'.{format_type.lower()}'
+#         transformed_img.save(new_path)
+#     transformed_img.save(new_path)
+#     if (new_path)!= path : os.remove(path)
+#     return new_path 
+
+
+
+# if __name__ == "__main__" :
+#     transforms ={
+#     "resize": {
+#       "width": 200,
+#       "height": 1600
+#     },
+#     "crop": {
+#       "width": 500,
+#       "height": 8,
+#       "x": 100,
+#       "y": 100
+#     },
+#     "rotate": 600,
+#     "format": "jpeg",
+#     "filters": {
+#       "grayscale": True,
+#       "sepia": True
+#     }}
+#     path = r'.\images\white_phosphorus.jpeg'
+#     transform_local_image(path,transforms)
+#     print("passed")
