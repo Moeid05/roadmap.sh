@@ -73,14 +73,6 @@ class TransformImageSerializer(serializers.Serializer):
         except Image.DoesNotExist:
             raise serializers.ValidationError(f"Image with id {image_id} does not exist.")
         
-    def get_image_path(self):
-        image_id = self.validated_data.get('image_id')
-        try:
-            image_obj = Image.objects.get(id=image_id)
-            return image_obj.image.path if hasattr(image_obj, 'image') else image_obj.image
-        except Image.DoesNotExist:
-            raise serializers.ValidationError(f"Image with id {image_id} does not exist.")
-        
     def update_image(self, new_image, img_format=None):
         image_id = self.validated_data.get('image_id')
         try:

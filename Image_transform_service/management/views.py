@@ -58,16 +58,16 @@ class TransformImageView(APIView):
             transforms = serializer.get_transforms()
             image_instance = serializer.get_image_instance().image
             storage = settings.STORAGE
-            try:
-                transformed_image,img_format = transformer.transform_instance_image(image_instance, transforms)
-                img_io = io.BytesIO()
-                transformed_image.save(img_io, format = img_format or 'PNG')
-                img_content = ContentFile(img_io.getvalue(), name=f'transformed.{img_format.lower() if img_format else "jpeg"}')
-                return FileResponse(img_content , content_type='image/jpeg')
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # try:
+            transformed_image,img_format = transformer.transform_instance_image(image_instance, transforms)
+            img_io = io.BytesIO()
+            transformed_image.save(img_io, format = img_format or 'PNG')
+            img_content = ContentFile(img_io.getvalue(), name=f'transformed.{img_format.lower() if img_format else "jpeg"}')
+            return FileResponse(img_content , content_type='image/jpeg')
+        #     except Exception as e:
+        #         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # else:
+        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class TransformAndUpdateImageView(APIView) : 
     def post(self ,request ,id):
         data = request.data
@@ -75,9 +75,7 @@ class TransformAndUpdateImageView(APIView) :
         serializer = TransformImageSerializer(data=request.data)
         if serializer.is_valid():
             transforms = serializer.get_transforms()
-            image_path = serializer.get_image_path()
             image_instance = serializer.get_image_instance().image
-            print(image_path)
             try:
                 new_image,img_format = transformer.transform_instance_image(image_instance, transforms)
                 serializer.update_image(new_image,img_format)
