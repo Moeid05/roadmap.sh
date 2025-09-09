@@ -70,17 +70,21 @@ DATABASES = {
     }
 }
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ),
-# }
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    ),
-}
+AUTHENTICATION = str(os.environ.get('AUTHENTICATION')).lower()
+if AUTHENTICATION == "jwt" :
+    print('sure you were here')
+    REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        ),
+    }
+else :
+    print('and also here')
+    REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework.authentication.TokenAuthentication',
+        ),
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

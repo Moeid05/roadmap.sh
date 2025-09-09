@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from django_ratelimit.decorators import ratelimit
 from .serializer import ImageSerializer ,TransformImageSerializer
 from .models import Image
 from . import transformer
@@ -48,8 +49,8 @@ class ImageListView(ListAPIView):
     serializer_class = ImageSerializer
     pagination_class = ImagePagination
 
-
 class TransformImageView(APIView):
+    @ratelimit(key='user',rate='10/m')
     def post(self ,request ,id):
         data = request.data
         data['image_id'] = id
@@ -67,7 +68,9 @@ class TransformImageView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class TransformAndUpdateImageView(APIView) : 
+    @ratelimit(key='user',rate='10/m')
     def post(self ,request ,id):
         data = request.data
         data['image_id'] = id
