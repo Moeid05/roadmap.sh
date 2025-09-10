@@ -1,8 +1,7 @@
-from django.core.files.base import ContentFile
 import io
-import os
-from django.conf import settings 
+from django.core.files.base import ContentFile
 from django.http import FileResponse
+from django.core.cache import cache
 from rest_framework.generics import CreateAPIView ,ListAPIView ,GenericAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -10,10 +9,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from django_ratelimit.decorators import ratelimit
+import hashlib
+import json
 from .serializer import ImageSerializer ,TransformImageSerializer
 from .models import Image
-from . import transformer
-
+from .transformer import transform_instance_image
+from django.utils.decorators import method_decorator
 class UploadImageView(CreateAPIView) :
     queryset = Image.objects.all()
     permission_classes = [IsAuthenticated]
@@ -49,28 +50,39 @@ class ImageListView(ListAPIView):
     serializer_class = ImageSerializer
     pagination_class = ImagePagination
 
+@method_decorator(ratelimit(key='user', rate='10/m'),name='dispatch')
 class TransformImageView(APIView):
-    @ratelimit(key='user',rate='10/m')
+    #just for ratelimit
+    permission_classes = [IsAuthenticated]
     def post(self ,request ,id):
         data = request.data
         data['image_id'] = id
         serializer = TransformImageSerializer(data=request.data)
         if serializer.is_valid():
             transforms = serializer.get_transforms()
+            
+            transforms_json = json.dumps(transforms, sort_keys=True)
+            cache_key = f"transformed_image_{id}_{hashlib.md5(transforms_json.encode()).hexdigest()}"
+            
+            cached_img_content = cache.get(cache_key)
+            if cached_img_content:
+                return FileResponse(cached_img_content, content_type='image/jpeg')
             image_instance = serializer.get_image_instance().image
             try:
-                transformed_image,img_format = transformer.transform_instance_image(image_instance, transforms)
+                transformed_image,img_format = transform_instance_image(image_instance, transforms)
                 img_io = io.BytesIO()
                 transformed_image.save(img_io, format = img_format or 'PNG')
                 img_content = ContentFile(img_io.getvalue(), name=f'transformed.{img_format.lower() if img_format else "jpeg"}')
+                cache.set(cache_key, img_content, timeout=600)
                 return FileResponse(img_content , content_type='image/jpeg')
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+@method_decorator(ratelimit(key='user', rate='10/m'),name='dispatch')
 class TransformAndUpdateImageView(APIView) : 
-    @ratelimit(key='user',rate='10/m')
+    #just for ratelimit
+    permission_classes = [IsAuthenticated]
     def post(self ,request ,id):
         data = request.data
         data['image_id'] = id
@@ -79,7 +91,7 @@ class TransformAndUpdateImageView(APIView) :
             transforms = serializer.get_transforms()
             image_instance = serializer.get_image_instance().image
             try:
-                new_image,img_format = transformer.transform_instance_image(image_instance, transforms)
+                new_image,img_format = transform_instance_image(image_instance, transforms)
                 serializer.update_image(new_image,img_format)
                 return FileResponse(serializer.get_image_instance().image.open(),content_type='image/jpeg')
             except Exception as e:
