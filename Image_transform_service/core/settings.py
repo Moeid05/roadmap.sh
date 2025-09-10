@@ -142,3 +142,10 @@ if STORAGE == "cloud" :
             "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
         }
     }
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
