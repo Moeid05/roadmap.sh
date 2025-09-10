@@ -63,7 +63,6 @@ def compress(image,quality) :
     return Image.open(output)
 
 def transform_image(image, transformations):
-    print('random number : 20351')
     if 'resize' in transformations:
         width = transformations['resize'].get('width')
         height = transformations['resize'].get('height')
