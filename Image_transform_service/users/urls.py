@@ -6,12 +6,11 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import UserRegistrationView
-auth_method = settings.AUTHENTICATION
 urlpatterns = [
     path('register/', UserRegistrationView.as_view() ),
-
-
 ]
+
+auth_method = settings.AUTHENTICATION
 urlpatterns += [
             path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
             path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
