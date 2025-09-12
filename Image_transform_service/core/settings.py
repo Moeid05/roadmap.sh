@@ -29,6 +29,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -37,7 +38,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+MIDDLEWARE += ['django.middleware.cache.FetchFromCacheMiddleware']
 ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
@@ -142,10 +143,18 @@ if STORAGE == "cloud" :
             "BACKEND" : "storages.backends.s3boto3.S3Boto3Storage"
         }
     }
-
+CACHE_BACKEND = os.environ.get('CACHE_BACKEND')
+CACHE_LOCATION = os.environ.get('CACHE_LOCATION')
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-snowflake',
+    } if not CACHE_BACKEND else 
+    {
+        "BACKEND": CACHE_BACKEND,
+        "LOCATION": CACHE_LOCATION,
     }
 }
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 600
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
