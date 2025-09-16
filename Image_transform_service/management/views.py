@@ -69,32 +69,31 @@ class TransformImageView(APIView):
             cached_img_content = cache.get(cache_key)
             if cached_img_content:
                 return FileResponse(cached_img_content, content_type='image/jpeg')
-            # try:
-            if settings.USE_CELERY:
-                result = transform_image_task.delay(id, transforms)
-                task_result = result.get()
-                if task_result.get('status') == 'error':
-                    return Response({"error": task_result.get('message')}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                img_base64 = task_result.get('transformed_image')
-                img_format = task_result.get('img_format') or 'PNG'
-                img_bytes = base64.b64decode(img_base64)
-                img_io = io.BytesIO(img_bytes)
-                img_io.seek(0)
-                img_content = ContentFile(img_io.read(), name=f'transformed.{img_format.lower()}')
-                cache.set(cache_key, img_content, timeout=600)
-                img_io.seek(0)
-                return FileResponse(img_io, content_type=f'image/{img_format.lower()}')
-            else:
-                result = transform_image_task(id, transforms)
-                image_instance = Image.objects.get(id=id).image
-                transformed_image,img_format = transform_instance_image(image_instance, transforms)
-                img_io = io.BytesIO()
-                transformed_image.save(img_io, format = img_format or 'PNG')
-                img_content = ContentFile(img_io.getvalue(), name=f'transformed.{img_format.lower() if img_format else "jpeg"}')
-                cache.set(cache_key, img_content, timeout=600)
-                return FileResponse(img_content , content_type='image/jpeg')
-            # except Exception as e:
-            #     return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            try:
+                if settings.USE_CELERY:
+                    result = transform_image_task.delay(id, transforms)
+                    task_result = result.get()
+                    if task_result.get('status') == 'error':
+                        return Response({"error": task_result.get('message')}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    img_base64 = task_result.get('transformed_image')
+                    img_format = task_result.get('img_format') or 'PNG'
+                    img_bytes = base64.b64decode(img_base64)
+                    img_io = io.BytesIO(img_bytes)
+                    img_io.seek(0)
+                    img_content = ContentFile(img_io.read(), name=f'transformed.{img_format.lower()}')
+                    cache.set(cache_key, img_content, timeout=600)
+                    return FileResponse(img_content, content_type=f'image/{img_format.lower()}')
+                else:
+                    result = transform_image_task(id, transforms)
+                    image_instance = Image.objects.get(id=id).image
+                    transformed_image,img_format = transform_instance_image(image_instance, transforms)
+                    img_io = io.BytesIO()
+                    transformed_image.save(img_io, format = img_format or 'PNG')
+                    img_content = ContentFile(img_io.getvalue(), name=f'transformed.{img_format.lower() if img_format else "jpeg"}')
+                    cache.set(cache_key, img_content, timeout=600)
+                    return FileResponse(img_content , content_type='image/jpeg')
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -110,7 +109,25 @@ class TransformAndUpdateImageView(APIView) :
             transforms = serializer.get_transforms()
             image_instance = serializer.get_image_instance().image
             try:
-                new_image,img_format = transform_image_task.delay(image_instance, transforms)
+                if settings.USE_CELERY:
+                    result = transform_image_task.delay(id, transforms)
+                    task_result = result.get()
+                    if task_result.get('status') == 'error':
+                        return Response({"error": task_result.get('message')}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    img_base64 = task_result.get('transformed_image')
+                    img_format = task_result.get('img_format') or 'PNG'
+                    img_bytes = base64.b64decode(img_base64)
+                    img_io = io.BytesIO(img_bytes)
+                    img_io.seek(0)
+                    new_image = ContentFile(img_io.read(), name=f'transformed.{img_format.lower()}')
+                    img_io.seek(0)
+                else:
+                    result = transform_image_task(id, transforms)
+                    image_instance = Image.objects.get(id=id).image
+                    transformed_image,img_format = transform_instance_image(image_instance, transforms)
+                    img_io = io.BytesIO()
+                    transformed_image.save(img_io, format = img_format or 'PNG')
+                    new_image = ContentFile(img_io.getvalue(), name=f'transformed.{img_format.lower() if img_format else "jpeg"}')
                 serializer.update_image(new_image,img_format)
                 return FileResponse(serializer.get_image_instance().image.open(),content_type='image/jpeg')
             except Exception as e:
