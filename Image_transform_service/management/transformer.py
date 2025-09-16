@@ -1,7 +1,6 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image as Pimage, ImageDraw, ImageFont, ImageFilter
 import io
-import os
-import re
+
 def apply_sepia(image):
     width, height = image.size
     pixels = image.load() 
@@ -51,16 +50,16 @@ def rotate(image,angle) :
     return image
         
 def watermark(image, text, position=(0, 0), font_size=20):
-    watermark = Image.new('RGBA', image.size)
+    watermark = Pimage.new('RGBA', image.size)
     draw = ImageDraw.Draw(watermark)
     font = ImageFont.load_default()
     draw.text(position, text, fill=(255, 255, 255, 128), font=font)
-    return Image.alpha_composite(image.convert('RGBA'), watermark)
+    return Pimage.alpha_composite(image.convert('RGBA'), watermark)
 
 def compress(image,quality) : 
     output = io.BytesIO()
     image.save(output, format='png', quality=quality)
-    return Image.open(output)
+    return Pimage.open(output)
 
 def transform_image(image, transformations):
     if 'resize' in transformations:
@@ -86,10 +85,10 @@ def transform_image(image, transformations):
             image = watermark(image, text, position)
 
     if 'flip' in transformations and transformations['flip']:
-        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        image = image.transpose(Pimage.FLIP_TOP_BOTTOM)
 
     if 'mirror' in transformations and transformations['mirror']:
-        image = image.transpose(Image.FLIP_LEFT_RIGHT)
+        image = image.transpose(Pimage.FLIP_LEFT_RIGHT)
 
     if 'compress' in transformations:
         quality = transformations['compress'].get('quality', 85)
@@ -116,7 +115,7 @@ def transform_image(image, transformations):
     return image
 
 def transform_instance_image(image,transforms) :
-    img = Image.open(image)
+    img = Pimage.open(image)
     transformed_img = transform_image(img, transforms)
     img_io = io.BytesIO()
     img_format = transforms.get('format') if transforms.get('format') else 'JPEG'
